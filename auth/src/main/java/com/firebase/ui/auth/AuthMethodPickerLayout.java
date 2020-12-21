@@ -144,6 +144,14 @@ public class AuthMethodPickerLayout implements Parcelable {
         }
 
         /**
+         * Set the ID of the Email link sign in button in the custom layout.
+         */
+        public AuthMethodPickerLayout.Builder setEmailLinkButtonId(@IdRes int emailLinkButton) {
+            providersMapping.put(EmailAuthProvider.EMAIL_LINK_SIGN_IN_METHOD, emailLinkButton);
+            return this;
+        }
+
+        /**
          * Set the ID of the Phone Number sign in button in the custom layout.
          */
         public AuthMethodPickerLayout.Builder setPhoneButtonId(@IdRes int phoneButton) {
