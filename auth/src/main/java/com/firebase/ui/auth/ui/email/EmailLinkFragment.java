@@ -38,6 +38,8 @@ public class EmailLinkFragment extends InvisibleFragmentBase {
 
     // Used to avoid sending a new email when popping off the fragment backstack
     private boolean mEmailSent;
+    // Used to save last entered email on device
+    private static String savedEmail = "";
 
     public static EmailLinkFragment newInstance(@NonNull final String email,
                                                 @NonNull final ActionCodeSettings settings) {
@@ -51,12 +53,17 @@ public class EmailLinkFragment extends InvisibleFragmentBase {
                                                 final boolean forceSameDevice) {
         EmailLinkFragment fragment = new EmailLinkFragment();
         Bundle args = new Bundle();
+        savedEmail = email;
         args.putString(ExtraConstants.EMAIL, email);
         args.putParcelable(ExtraConstants.ACTION_CODE_SETTINGS, actionCodeSettings);
         args.putParcelable(ExtraConstants.IDP_RESPONSE, idpResponseForLinking);
         args.putBoolean(ExtraConstants.FORCE_SAME_DEVICE, forceSameDevice);
         fragment.setArguments(args);
         return fragment;
+    }
+
+    public static String getSavedEmail() {
+        return savedEmail;
     }
 
     @Override
@@ -117,7 +124,7 @@ public class EmailLinkFragment extends InvisibleFragmentBase {
     private void initHandler() {
         mEmailLinkSendEmailHandler = new ViewModelProvider(this).get(EmailLinkSendEmailHandler
                 .class);
-        mEmailLinkSendEmailHandler.init(getFlowParams());
+        mEmailLinkSendEmailHandler.init(getFlowParams())
 
         mEmailLinkSendEmailHandler.getOperation().observe(getViewLifecycleOwner(), new ResourceObserver<String>(this,
                 R.string.fui_progress_dialog_sending) {
