@@ -177,7 +177,10 @@ public final class AuthUI {
             Log.e(TAG, "Couldn't set the FUI version.", e);
         }
 
-        mAuth.useAppLanguage();
+        // Note(istep): SS specific used for email etc.
+        // https://firebase.google.com/docs/reference/js/firebase.auth.Auth#languagecode
+        // mAuth.useAppLanguage();
+        mAuth.setLanguageCode("hr");
     }
 
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)

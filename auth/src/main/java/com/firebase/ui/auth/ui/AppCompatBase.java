@@ -16,9 +16,14 @@ package com.firebase.ui.auth.ui;
 
 import android.annotation.SuppressLint;
 import android.content.pm.ActivityInfo;
+import android.content.res.Configuration;
+import android.content.res.Resources;
+import android.os.Build;
 import android.os.Bundle;
 
 import com.firebase.ui.auth.R;
+
+import java.util.Locale;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -36,6 +41,16 @@ public abstract class AppCompatBase extends HelperActivityBase {
 
         if (getFlowParams().lockOrientation) {
             lockOrientation();
+        }
+
+        // Note(istep): SS specific.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+            Locale locale = new Locale("hr");
+            Locale.setDefault(locale);
+            Resources resources = getBaseContext().getResources();
+            Configuration config = resources.getConfiguration();
+            config.setLocale(locale);
+            resources.updateConfiguration(config, resources.getDisplayMetrics());
         }
     }
 
