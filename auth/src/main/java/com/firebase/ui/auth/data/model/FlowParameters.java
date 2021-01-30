@@ -21,6 +21,7 @@ import android.text.TextUtils;
 import com.firebase.ui.auth.AuthMethodPickerLayout;
 import com.firebase.ui.auth.AuthUI;
 import com.firebase.ui.auth.AuthUI.IdpConfig;
+import com.firebase.ui.auth.ui.phone.PhoneNumberCustomLayout;
 import com.firebase.ui.auth.util.ExtraConstants;
 import com.firebase.ui.auth.util.Preconditions;
 import com.google.firebase.auth.ActionCodeSettings;
@@ -60,6 +61,7 @@ public class FlowParameters implements Parcelable {
             String emailLink = in.readString();
             ActionCodeSettings passwordResetSettings = in.readParcelable(ActionCodeSettings.class.getClassLoader());
             AuthMethodPickerLayout customLayout = in.readParcelable(AuthMethodPickerLayout.class.getClassLoader());
+            PhoneNumberCustomLayout phoneNumberCustomLayout = in.readParcelable(PhoneNumberCustomLayout.class.getClassLoader());
 
             return new FlowParameters(
                     appName,
@@ -76,7 +78,8 @@ public class FlowParameters implements Parcelable {
                     lockOrientation,
                     emailLink,
                     passwordResetSettings,
-                    customLayout);
+                    customLayout,
+                    phoneNumberCustomLayout);
         }
 
         @Override
@@ -121,6 +124,9 @@ public class FlowParameters implements Parcelable {
     @Nullable
     public final AuthMethodPickerLayout authMethodPickerLayout;
 
+    @Nullable
+    public final PhoneNumberCustomLayout phoneNumberCustomLayout;
+
     public FlowParameters(
             @NonNull String appName,
             @NonNull List<IdpConfig> providers,
@@ -136,7 +142,9 @@ public class FlowParameters implements Parcelable {
             boolean lockOrientation,
             @Nullable String emailLink,
             @Nullable ActionCodeSettings passwordResetSettings,
-            @Nullable AuthMethodPickerLayout authMethodPickerLayout) {
+            @Nullable AuthMethodPickerLayout authMethodPickerLayout,
+            @Nullable PhoneNumberCustomLayout phoneNumberCustomLayout
+            ) {
         this.appName = Preconditions.checkNotNull(appName, "appName cannot be null");
         this.providers = Collections.unmodifiableList(
                 Preconditions.checkNotNull(providers, "providers cannot be null"));
@@ -153,6 +161,7 @@ public class FlowParameters implements Parcelable {
         this.emailLink = emailLink;
         this.passwordResetSettings = passwordResetSettings;
         this.authMethodPickerLayout = authMethodPickerLayout;
+        this.phoneNumberCustomLayout = phoneNumberCustomLayout;
     }
 
     /**
@@ -179,6 +188,7 @@ public class FlowParameters implements Parcelable {
         dest.writeString(emailLink);
         dest.writeParcelable(passwordResetSettings, flags);
         dest.writeParcelable(authMethodPickerLayout, flags);
+        dest.writeParcelable(phoneNumberCustomLayout, flags);
     }
 
     @Override

@@ -1,5 +1,6 @@
 package com.firebase.ui.auth.ui.phone;
 
+import android.app.Dialog;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
@@ -23,12 +24,16 @@ import com.firebase.ui.auth.util.ui.ImeHelper;
 import com.firebase.ui.auth.viewmodel.ResourceObserver;
 import com.google.android.material.textfield.TextInputLayout;
 
+import java.util.HashMap;
 import java.util.Locale;
 
+import androidx.annotation.IdRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
+import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.ViewModelProvider;
+
 
 /**
  * Displays country selector and phone number input form for users
@@ -42,13 +47,17 @@ public class CheckPhoneNumberFragment extends FragmentBase implements View.OnCli
     private boolean mCalled;
 
     private ProgressBar mProgressBar;
+    private Dialog mProgressDialog;
     private Button mSubmitButton;
     private CountryListSpinner mCountryListSpinner;
     private TextInputLayout mPhoneInputLayout;
     private EditText mPhoneEditText;
     private TextView mSmsTermsText;
     private TextView mFooterText;
+    private View mBackView;
 
+
+    private HashMap<String, Integer> defaultIds;
 
     public static CheckPhoneNumberFragment newInstance(Bundle params) {
         CheckPhoneNumberFragment fragment = new CheckPhoneNumberFragment();
@@ -65,6 +74,7 @@ public class CheckPhoneNumberFragment extends FragmentBase implements View.OnCli
                 .get(PhoneNumberVerificationHandler.class);
         mCheckPhoneHandler = new ViewModelProvider(this)
                 .get(CheckPhoneHandler.class);
+        registerDefaultIds();
     }
 
     @Nullable
@@ -72,18 +82,20 @@ public class CheckPhoneNumberFragment extends FragmentBase implements View.OnCli
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fui_phone_layout, container, false);
+        return getPhoneLayout(inflater, container);
+        // return inflater.inflate(R.layout.fui_phone_layout, container, false);
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        mProgressBar = view.findViewById(R.id.top_progress_bar);
-        mSubmitButton = view.findViewById(R.id.send_code);
-        mCountryListSpinner = view.findViewById(R.id.country_list);
-        mPhoneInputLayout = view.findViewById(R.id.phone_layout);
-        mPhoneEditText = view.findViewById(R.id.phone_number);
-        mSmsTermsText = view.findViewById(R.id.send_sms_tos);
-        mFooterText = view.findViewById(R.id.email_footer_tos_and_pp_text);
+        mProgressBar = getViewControl(view, PhoneNumberCustomLayoutTags.PROGRESS_BAR);
+        mSubmitButton = getViewControl(view, PhoneNumberCustomLayoutTags.SUBMIT_BUTTON);
+        mCountryListSpinner = getViewControl(view, PhoneNumberCustomLayoutTags.COUNTRY_LIST_SPINNER);
+        mPhoneInputLayout = getViewControl(view, PhoneNumberCustomLayoutTags.PHONE_INPUT_LAYOUT);
+        mPhoneEditText = getViewControl(view, PhoneNumberCustomLayoutTags.PHONE_EDIT_TEXT);
+        mSmsTermsText = getViewControl(view, PhoneNumberCustomLayoutTags.SMS_TERMS_TEXT);
+        mFooterText = getViewControl(view, PhoneNumberCustomLayoutTags.FOOTER_TEXT);
+        mBackView = getViewControl(view, PhoneNumberCustomLayoutTags.BACK_VIEW);
 
         mSmsTermsText.setText(getString(R.string.fui_sms_terms_of_service,
                 getString(R.string.fui_verify_phone_number)));
@@ -100,6 +112,7 @@ public class CheckPhoneNumberFragment extends FragmentBase implements View.OnCli
         });
         mSubmitButton.setOnClickListener(this);
 
+        setupCustomLayoutListeners();
         setupPrivacyDisclosures();
         setupCountrySpinner();
     }
@@ -107,17 +120,18 @@ public class CheckPhoneNumberFragment extends FragmentBase implements View.OnCli
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        mCheckPhoneHandler.getOperation().observe(getViewLifecycleOwner(), new ResourceObserver<PhoneNumber>(this) {
-            @Override
-            protected void onSuccess(@NonNull PhoneNumber number) {
-                start(number);
-            }
+        mCheckPhoneHandler.getOperation()
+                .observe(getViewLifecycleOwner(), new ResourceObserver<PhoneNumber>(this) {
+                    @Override
+                    protected void onSuccess(@NonNull PhoneNumber number) {
+                        start(number);
+                    }
 
-            @Override
-            protected void onFailure(@NonNull Exception e) {
-                // Just let the user enter their data
-            }
-        });
+                    @Override
+                    protected void onFailure(@NonNull Exception e) {
+                        // Just let the user enter their data
+                    }
+                });
 
         if (savedInstanceState != null || mCalled) {
             return;
@@ -247,15 +261,97 @@ public class CheckPhoneNumberFragment extends FragmentBase implements View.OnCli
         }
     }
 
+    private boolean isCustomLayoutEnabled() {
+        PhoneNumberCustomLayout customPhoneLayout = getFlowParams().phoneNumberCustomLayout;
+        return (customPhoneLayout != null) && customPhoneLayout.getIsValid();
+    }
+
+
+    private View getPhoneLayout(@NonNull LayoutInflater inflater,
+                                @Nullable ViewGroup container) {
+        if (isCustomLayoutEnabled()) {
+            return inflater.inflate(getCustomPhoneLayout().getMainLayout(), container, false);
+        } else {
+            return inflater.inflate(R.layout.fui_phone_layout, container, false);
+        }
+    }
+
+    private <T extends View> T getViewControl(@NonNull View view, @NonNull String tag) {
+        if (isCustomLayoutEnabled()) {
+            return view.findViewById(getCustomPhoneLayout().getViewControlId(tag));
+        } else {
+            return view.findViewById(getDefaultViewControlId(tag));
+        }
+    }
+
+    /**
+     * @return PhoneNumberCustomLayout set from public API.
+     * @throws IllegalStateException if phone number custom layout is not set from public API.
+     */
+    @NonNull
+    private PhoneNumberCustomLayout getCustomPhoneLayout() {
+        PhoneNumberCustomLayout customLayout = getFlowParams().phoneNumberCustomLayout;
+        if (customLayout == null)
+            throw new IllegalStateException("Phone custom layout is not set.");
+        return customLayout;
+    }
+
+    private @IdRes
+    int getDefaultViewControlId(String tag) {
+        Integer resourceId = defaultIds.get(tag);
+        if (resourceId == null) return 0;
+        return resourceId;
+    }
+
+    private void registerDefaultIds() {
+        defaultIds = new HashMap<>();
+        defaultIds.put(PhoneNumberCustomLayoutTags.PROGRESS_BAR, R.id.progress_bar);
+        defaultIds.put(PhoneNumberCustomLayoutTags.SUBMIT_BUTTON, R.id.send_code);
+        defaultIds.put(PhoneNumberCustomLayoutTags.COUNTRY_LIST_SPINNER, R.id.country_list);
+        defaultIds.put(PhoneNumberCustomLayoutTags.PHONE_INPUT_LAYOUT, R.id.phone_layout);
+        defaultIds.put(PhoneNumberCustomLayoutTags.PHONE_EDIT_TEXT, R.id.phone_number);
+        defaultIds.put(PhoneNumberCustomLayoutTags.SMS_TERMS_TEXT, R.id.send_sms_tos);
+        defaultIds.put(PhoneNumberCustomLayoutTags.FOOTER_TEXT, R.id.email_footer_tos_and_pp_text);
+    }
+
+    private void setupCustomLayoutListeners() {
+        if (mBackView != null) {
+            mBackView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                  FragmentActivity activity = getActivity();
+                  if (activity != null)
+                      activity.onBackPressed();
+                }
+            });
+        }
+        // Note(istep):
+        // SS specific. Remove before PR to FirebaseUI.
+        mPhoneInputLayout.setEndIconOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onNext();
+            }
+        });
+    }
+
     @Override
     public void showProgress(int message) {
         mSubmitButton.setEnabled(false);
-        mProgressBar.setVisibility(View.VISIBLE);
+        if (mProgressBar != null)
+            mProgressBar.setVisibility(View.VISIBLE);
+
+        if (mProgressDialog != null)
+            mProgressDialog.show();
     }
 
     @Override
     public void hideProgress() {
         mSubmitButton.setEnabled(true);
-        mProgressBar.setVisibility(View.INVISIBLE);
+        if (mProgressBar != null)
+            mProgressBar.setVisibility(View.INVISIBLE);
+
+        if (mProgressDialog != null)
+            mProgressDialog.dismiss();
     }
 }

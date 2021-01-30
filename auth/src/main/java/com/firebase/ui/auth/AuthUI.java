@@ -25,6 +25,7 @@ import android.util.Log;
 import com.facebook.login.LoginManager;
 import com.firebase.ui.auth.data.model.FlowParameters;
 import com.firebase.ui.auth.ui.idp.AuthMethodPickerActivity;
+import com.firebase.ui.auth.ui.phone.PhoneNumberCustomLayout;
 import com.firebase.ui.auth.util.CredentialUtils;
 import com.firebase.ui.auth.util.ExtraConstants;
 import com.firebase.ui.auth.util.GoogleApiUtils;
@@ -175,6 +176,7 @@ public final class AuthUI {
         } catch (Exception e) {
             Log.e(TAG, "Couldn't set the FUI version.", e);
         }
+
         mAuth.useAppLanguage();
     }
 
@@ -1300,6 +1302,7 @@ public final class AuthUI {
         boolean mEnableCredentials = true;
         boolean mEnableHints = true;
         AuthMethodPickerLayout mAuthMethodPickerLayout = null;
+        PhoneNumberCustomLayout mPhoneNumberCustomLayout = null;
         ActionCodeSettings mPasswordSettings = null;
 
         /**
@@ -1465,6 +1468,18 @@ public final class AuthUI {
         }
 
         /**
+         * Set a custom phone layout for the PhoneActivity screen.
+         * See {@link PhoneNumberCustomLayout}.
+         *
+         * @param phoneNumberCustomLayout descriptor object.
+         */
+        @NonNull
+        public T setPhoneNumberCustomLayout(@NonNull PhoneNumberCustomLayout phoneNumberCustomLayout) {
+            mPhoneNumberCustomLayout = phoneNumberCustomLayout;
+            return (T) this;
+        }
+
+        /**
          * Forces the sign-in method choice screen to always show, even if there is only
          * a single provider configured.
          * <p>
@@ -1587,7 +1602,8 @@ public final class AuthUI {
                     mLockOrientation,
                     mEmailLink,
                     mPasswordSettings,
-                    mAuthMethodPickerLayout);
+                    mAuthMethodPickerLayout,
+                    mPhoneNumberCustomLayout);
         }
     }
 }
