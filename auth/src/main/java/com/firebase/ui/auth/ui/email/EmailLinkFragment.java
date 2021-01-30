@@ -124,7 +124,7 @@ public class EmailLinkFragment extends InvisibleFragmentBase {
     private void initHandler() {
         mEmailLinkSendEmailHandler = new ViewModelProvider(this).get(EmailLinkSendEmailHandler
                 .class);
-        mEmailLinkSendEmailHandler.init(getFlowParams())
+        mEmailLinkSendEmailHandler.init(getFlowParams());
 
         mEmailLinkSendEmailHandler.getOperation().observe(getViewLifecycleOwner(), new ResourceObserver<String>(this,
                 R.string.fui_progress_dialog_sending) {
