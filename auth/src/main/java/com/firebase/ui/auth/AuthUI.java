@@ -24,6 +24,7 @@ import android.util.Log;
 
 import com.facebook.login.LoginManager;
 import com.firebase.ui.auth.data.model.FlowParameters;
+import com.firebase.ui.auth.ui.email.EmailCustomLayout;
 import com.firebase.ui.auth.ui.idp.AuthMethodPickerActivity;
 import com.firebase.ui.auth.ui.phone.PhoneNumberCustomLayout;
 import com.firebase.ui.auth.util.CredentialUtils;
@@ -1306,6 +1307,7 @@ public final class AuthUI {
         boolean mEnableHints = true;
         AuthMethodPickerLayout mAuthMethodPickerLayout = null;
         PhoneNumberCustomLayout mPhoneNumberCustomLayout = null;
+        EmailCustomLayout mEmailCustomLayout = null;
         ActionCodeSettings mPasswordSettings = null;
 
         /**
@@ -1471,7 +1473,7 @@ public final class AuthUI {
         }
 
         /**
-         * Set a custom phone layout for the PhoneActivity screen.
+         * Set a custom phone layout for the Phone sign in screen.
          * See {@link PhoneNumberCustomLayout}.
          *
          * @param phoneNumberCustomLayout descriptor object.
@@ -1479,6 +1481,18 @@ public final class AuthUI {
         @NonNull
         public T setPhoneNumberCustomLayout(@NonNull PhoneNumberCustomLayout phoneNumberCustomLayout) {
             mPhoneNumberCustomLayout = phoneNumberCustomLayout;
+            return (T) this;
+        }
+
+        /**
+         * Set a custom email layout for the Email sign in screen.
+         * See {@link EmailCustomLayout}.
+         *
+         * @param emailCustomLayout descriptor object.
+         */
+        @NonNull
+        public T setEmailCustomLayout(@NonNull EmailCustomLayout emailCustomLayout) {
+            mEmailCustomLayout = emailCustomLayout;
             return (T) this;
         }
 
@@ -1606,7 +1620,8 @@ public final class AuthUI {
                     mEmailLink,
                     mPasswordSettings,
                     mAuthMethodPickerLayout,
-                    mPhoneNumberCustomLayout);
+                    mPhoneNumberCustomLayout,
+                    mEmailCustomLayout);
         }
     }
 }

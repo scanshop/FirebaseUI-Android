@@ -28,6 +28,9 @@ import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.FirebaseNetworkException;
 import com.google.firebase.auth.EmailAuthProvider;
 
+import java.util.HashMap;
+
+import androidx.annotation.IdRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
@@ -54,6 +57,9 @@ public class CheckEmailFragment extends FragmentBase implements
     private TextInputLayout mEmailLayout;
     private EmailFieldValidator mEmailFieldValidator;
     private CheckEmailListener mListener;
+    private View mBackView;
+
+    private HashMap<String, Integer> defaultIds;
 
     public static CheckEmailFragment newInstance(@Nullable String email) {
         CheckEmailFragment fragment = new CheckEmailFragment();
@@ -63,27 +69,33 @@ public class CheckEmailFragment extends FragmentBase implements
         return fragment;
     }
 
+
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fui_check_email_layout, container, false);
+        return getEmailLayout(inflater, container);
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        mNextButton = view.findViewById(R.id.button_next);
-        mProgressBar = view.findViewById(R.id.top_progress_bar);
+        registerDefaultIds();
+
+        mNextButton = getViewControl(view, EmailCustomLayoutTags.SUBMIT_BUTTON);
+        mProgressBar = getViewControl(view, EmailCustomLayoutTags.PROGRESS_BAR);
 
         // Email field and validator
-        mEmailLayout = view.findViewById(R.id.email_layout);
-        mEmailEditText = view.findViewById(R.id.email);
+        mEmailLayout = getViewControl(view, EmailCustomLayoutTags.EMAIL_INPUT_LAYOUT);
+        mEmailEditText = getViewControl(view, EmailCustomLayoutTags.EMAIL_EDIT_TEXT);
         mEmailFieldValidator = new EmailFieldValidator(mEmailLayout);
         mEmailLayout.setOnClickListener(this);
         mEmailEditText.setOnClickListener(this);
 
+        // Custom back view
+        mBackView = getViewControl(view, EmailCustomLayoutTags.BACK_VIEW);
+
         // Hide header
-        TextView headerText = view.findViewById(R.id.header_text);
+        TextView headerText = getViewControl(view, EmailCustomLayoutTags.HEADER_TEXT);
         if (headerText != null) {
             headerText.setVisibility(View.GONE);
         }
@@ -96,8 +108,8 @@ public class CheckEmailFragment extends FragmentBase implements
 
         mNextButton.setOnClickListener(this);
 
-        TextView termsText = view.findViewById(R.id.email_tos_and_pp_text);
-        TextView footerText = view.findViewById(R.id.email_footer_tos_and_pp_text);
+        TextView termsText = getViewControl(view, EmailCustomLayoutTags.EMAIL_TERMS_TEXT);
+        TextView footerText = getViewControl(view, EmailCustomLayoutTags.FOOTER_TEXT);
         FlowParameters flowParameters = getFlowParams();
 
         if (!flowParameters.shouldShowProviderChoice()) {
@@ -110,6 +122,8 @@ public class CheckEmailFragment extends FragmentBase implements
                     flowParameters,
                     footerText);
         }
+
+        setupCustomLayoutListeners();
     }
 
     @Override
@@ -200,6 +214,80 @@ public class CheckEmailFragment extends FragmentBase implements
         String email = mEmailEditText.getText().toString();
         if (mEmailFieldValidator.validate(email)) {
             mHandler.fetchProvider(email);
+        }
+    }
+
+
+    /**
+     * @return EmailCustomLayout set from public API.
+     * @throws IllegalStateException if email custom layout is not set from public API.
+     */
+    @NonNull
+    private EmailCustomLayout getCustomEmailLayout() {
+        EmailCustomLayout customLayout = getFlowParams().emailCustomLayout;
+        if (customLayout == null)
+            throw new IllegalStateException("Email custom layout is not set.");
+        return customLayout;
+    }
+
+    private @IdRes
+    int getDefaultViewControlId(String tag) {
+        Integer resourceId = defaultIds.get(tag);
+        if (resourceId == null) return 0;
+        return resourceId;
+    }
+
+    private void registerDefaultIds() {
+        defaultIds = new HashMap<>();
+        defaultIds.put(EmailCustomLayoutTags.PROGRESS_BAR, R.id.top_progress_bar);
+        defaultIds.put(EmailCustomLayoutTags.SUBMIT_BUTTON, R.id.button_next);
+        defaultIds.put(EmailCustomLayoutTags.EMAIL_INPUT_LAYOUT, R.id.email_layout);
+        defaultIds.put(EmailCustomLayoutTags.EMAIL_EDIT_TEXT, R.id.email);
+        defaultIds.put(EmailCustomLayoutTags.EMAIL_TERMS_TEXT, R.id.email_tos_and_pp_text);
+        defaultIds.put(EmailCustomLayoutTags.HEADER_TEXT, R.id.header_text);
+        defaultIds.put(EmailCustomLayoutTags.FOOTER_TEXT, R.id.email_footer_tos_and_pp_text);
+    }
+
+    private void setupCustomLayoutListeners() {
+        if (mBackView != null) {
+            mBackView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    FragmentActivity activity = getActivity();
+                    if (activity != null)
+                        activity.onBackPressed();
+                }
+            });
+        }
+        // Note(istep):
+        // SS specific. Remove before PR to FirebaseUI.
+        mEmailLayout.setEndIconOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onDonePressed();
+            }
+        });
+    }
+
+    private boolean isCustomLayoutEnabled() {
+        EmailCustomLayout customLayout = getFlowParams().emailCustomLayout;
+        return (customLayout != null) && customLayout.getIsValid();
+    }
+
+    private View getEmailLayout(@NonNull LayoutInflater inflater,
+                                @Nullable ViewGroup container) {
+        if (isCustomLayoutEnabled()) {
+            return inflater.inflate(getCustomEmailLayout().getMainLayout(), container, false);
+        } else {
+            return inflater.inflate(R.layout.fui_check_email_layout, container, false);
+        }
+    }
+
+    private <T extends View> T getViewControl(@NonNull View view, @NonNull String tag) {
+        if (isCustomLayoutEnabled()) {
+            return view.findViewById(getCustomEmailLayout().getViewControlId(tag));
+        } else {
+            return view.findViewById(getDefaultViewControlId(tag));
         }
     }
 
