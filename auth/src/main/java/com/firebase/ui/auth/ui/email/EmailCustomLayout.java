@@ -24,7 +24,7 @@ public class EmailCustomLayout implements Parcelable {
     @LayoutRes
     private int mainLayout;
 
-    private boolean mIsValid = false;
+    private int mIsValid = 0;
 
     /**
      * EMAIL_VIEW_CONTROL_IDS -> IdRes of view controls.
@@ -35,7 +35,7 @@ public class EmailCustomLayout implements Parcelable {
 
     protected EmailCustomLayout(Parcel in) {
         mainLayout = in.readInt();
-        this.mIsValid = in.readBoolean();
+        this.mIsValid = in.readInt();
 
         Bundle buttonsBundle = in.readBundle(getClass().getClassLoader());
         this.mViewControls = new HashMap<>();
@@ -64,7 +64,7 @@ public class EmailCustomLayout implements Parcelable {
         /**
          * EMAIL_VIEW_CONTROL_IDS -> IdRes of view controls.
          */
-        private Map<String, Integer> mViewControls;
+        private final Map<String, Integer> mViewControls;
 
         /**
          * Storage for necessary controls constants.
@@ -158,11 +158,11 @@ public class EmailCustomLayout implements Parcelable {
          * @throws IllegalArgumentException if necessary controls for the custom layout are not set.
          */
         public EmailCustomLayout build() {
-
+            instance.mIsValid = 0;
             checkNecessaryControls();
 
             instance.mViewControls = mViewControls;
-            instance.mIsValid = true;
+            instance.mIsValid = 1;
             return instance;
         }
 
@@ -197,7 +197,7 @@ public class EmailCustomLayout implements Parcelable {
     /**
      * @return true if EmailCustomLayout is valid, otherwise false.
      */
-    public boolean getIsValid() { return mIsValid; }
+    public boolean getIsValid() { return mIsValid == 1; }
 
     /**
      * @return main layout resource Id.
@@ -227,7 +227,7 @@ public class EmailCustomLayout implements Parcelable {
     @Override
     public void writeToParcel(Parcel parcel, int flags) {
         parcel.writeInt(mainLayout);
-        parcel.writeBoolean(mIsValid);
+        parcel.writeInt(mIsValid);
 
         Bundle bundle = new Bundle();
         if (mViewControls != null) {

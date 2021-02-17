@@ -25,7 +25,7 @@ public class PhoneNumberCustomLayout implements Parcelable {
     @LayoutRes
     private int mainLayout;
 
-    private boolean mIsValid = false;
+    private int mIsValid = 0;
 
     /**
      * PHONE_VIEW_CONTROL_IDS -> IdRes of view controls.
@@ -37,7 +37,7 @@ public class PhoneNumberCustomLayout implements Parcelable {
     protected PhoneNumberCustomLayout(@NonNull Parcel in) {
 
         mainLayout = in.readInt();
-        this.mIsValid = in.readBoolean();
+        this.mIsValid = in.readInt();
 
         Bundle buttonsBundle = in.readBundle(getClass().getClassLoader());
         this.mViewControls = new HashMap<>();
@@ -67,7 +67,7 @@ public class PhoneNumberCustomLayout implements Parcelable {
         /**
          * PHONE_VIEW_CONTROL_IDS -> IdRes of view controls.
          */
-        private Map<String, Integer> mViewControls;
+        private final Map<String, Integer> mViewControls;
 
         /**
          * Storage for necessary controls constants.
@@ -162,12 +162,12 @@ public class PhoneNumberCustomLayout implements Parcelable {
          * @return instance of {@link PhoneNumberCustomLayout}
          */
         public PhoneNumberCustomLayout build() {
-
+            instance.mIsValid = 0;
             checkNecessaryControls();
             checkProgressControl();
 
             instance.mViewControls = mViewControls;
-            instance.mIsValid = true;
+            instance.mIsValid = 1;
             return instance;
         }
 
@@ -226,7 +226,7 @@ public class PhoneNumberCustomLayout implements Parcelable {
     /**
      * @return true if PhoneNumberCustomLayout is valid, otherwise false.
      */
-    public boolean getIsValid() { return mIsValid; }
+    public boolean getIsValid() { return mIsValid == 1; }
 
     /**
      * @return main layout resource Id.
@@ -256,7 +256,7 @@ public class PhoneNumberCustomLayout implements Parcelable {
     @Override
     public void writeToParcel(Parcel parcel, int flags) {
         parcel.writeInt(mainLayout);
-        parcel.writeBoolean(mIsValid);
+        parcel.writeInt(mIsValid);
 
         Bundle bundle = new Bundle();
         if (mViewControls != null) {
