@@ -58,7 +58,8 @@ public abstract class ResourceObserver<T> implements Observer<Resource<T>> {
     @Override
     public final void onChanged(Resource<T> resource) {
         if (resource.getState() == State.LOADING) {
-            mProgressView.showProgress(mLoadingMessage);
+            // ScanShop specific.
+            //mProgressView.showProgress(mLoadingMessage);
             return;
         }
         mProgressView.hideProgress();
