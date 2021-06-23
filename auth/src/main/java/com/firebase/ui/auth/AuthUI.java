@@ -161,6 +161,7 @@ public final class AuthUI {
     private static final IdentityHashMap<FirebaseApp, AuthUI> INSTANCES = new IdentityHashMap<>();
 
     private static Context sApplicationContext;
+    private static String layoutLanguage = "en";
 
     private final FirebaseApp mApp;
     private final FirebaseAuth mAuth;
@@ -181,7 +182,10 @@ public final class AuthUI {
         // Note(istep): SS specific used for email etc.
         // https://firebase.google.com/docs/reference/js/firebase.auth.Auth#languagecode
         // mAuth.useAppLanguage();
-        mAuth.setLanguageCode("hr");
+        // mAuth.setLanguageCode("hr");
+
+        // Note(istep): Update use language from AuthUILanguage.
+        mAuth.setLanguageCode(AuthUILanguage.AppLanguageCode);
     }
 
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)

@@ -21,6 +21,7 @@ import android.content.res.Resources;
 import android.os.Build;
 import android.os.Bundle;
 
+import com.firebase.ui.auth.AuthUILanguage;
 import com.firebase.ui.auth.R;
 
 import java.util.Locale;
@@ -45,7 +46,7 @@ public abstract class AppCompatBase extends HelperActivityBase {
 
         // Note(istep): SS specific.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-            Locale locale = new Locale("hr");
+            Locale locale = new Locale(AuthUILanguage.AppLanguageCode);
             Locale.setDefault(locale);
             Resources resources = getBaseContext().getResources();
             Configuration config = resources.getConfiguration();
